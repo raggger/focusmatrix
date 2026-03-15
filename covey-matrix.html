@@ -180,6 +180,12 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .task-item:hover .task-actions{opacity:1;}
 .task-del{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px;line-height:1;transition:color .15s;}
 .task-del:hover{color:#e74c3c;}
+.task-confirm-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.task-confirm-wrap span{font-size:0.72rem;color:var(--text-muted);white-space:nowrap;}
+.btn-sure{background:none;border:1px solid #e74c3c;border-radius:4px;padding:1px 7px;font-size:0.72rem;color:#e74c3c;cursor:pointer;font-family:var(--font-body);font-weight:600;transition:all .15s;}
+.btn-sure:hover{background:#e74c3c;color:white;}
+.btn-cancel{background:none;border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:0.72rem;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);transition:all .15s;}
+.btn-cancel:hover{border-color:var(--text-muted);color:var(--text);}
 
 /* ADD */
 .add-task-form{display:flex;flex-direction:column;gap:6px;}
@@ -234,7 +240,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
     <p class="signin-sub">Your Personal Focus Board</p>
 
     <label class="signin-label" for="si-name">Your Name</label>
-    <input class="signin-input" id="si-name" type="text" placeholder="e.g. David" maxlength="40" autocomplete="off">
+    <input class="signin-input" id="si-name" type="text" placeholder="e.g. Teddy Tony" maxlength="40" autocomplete="off">
 
     <label class="signin-label" for="si-motto">Your Motto</label>
     <input class="signin-input" id="si-motto" type="text" placeholder="e.g. Do all things with purpose" maxlength="80" autocomplete="off">
@@ -333,13 +339,55 @@ const VERSES = [
   { text: "Now to him who is able to do immeasurably more than all we ask or imagine.", ref: "Ephesians 3:20" },
   { text: "Cast all your anxiety on him because he cares for you.", ref: "1 Peter 5:7" },
   { text: "The heart of man plans his way, but the Lord establishes his steps.", ref: "Proverbs 16:9" },
+  { text: "The Lord is my light and my salvation — whom shall I fear?", ref: "Psalm 27:1" },
+  { text: "He gives strength to the weary and increases the power of the weak.", ref: "Isaiah 40:29" },
+  { text: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.", ref: "Philippians 4:6" },
+  { text: "And we know that in all things God works for the good of those who love him.", ref: "Romans 8:28" },
+  { text: "The Lord will fight for you; you need only to be still.", ref: "Exodus 14:14" },
+  { text: "Delight yourself in the Lord, and he will give you the desires of your heart.", ref: "Psalm 37:4" },
+  { text: "For God so loved the world that he gave his one and only Son.", ref: "John 3:16" },
+  { text: "I press on toward the goal to win the prize for which God has called me.", ref: "Philippians 3:14" },
+  { text: "The name of the Lord is a fortified tower; the righteous run to it and are safe.", ref: "Proverbs 18:10" },
+  { text: "God is our refuge and strength, an ever-present help in trouble.", ref: "Psalm 46:1" },
+  { text: "With God all things are possible.", ref: "Matthew 19:26" },
+  { text: "For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.", ref: "2 Timothy 1:7" },
+  { text: "Your word is a lamp for my feet, a light on my path.", ref: "Psalm 119:105" },
+  { text: "Come to me, all you who are weary and burdened, and I will give you rest.", ref: "Matthew 11:28" },
+  { text: "Be still and know that I am God.", ref: "Psalm 46:10" },
+  { text: "No weapon formed against you shall prosper.", ref: "Isaiah 54:17" },
+  { text: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles.", ref: "Isaiah 40:31" },
+  { text: "The joy of the Lord is your strength.", ref: "Nehemiah 8:10" },
+  { text: "I have hidden your word in my heart that I might not sin against you.", ref: "Psalm 119:11" },
+  { text: "Greater is he that is in you, than he that is in the world.", ref: "1 John 4:4" },
+  { text: "Before I formed you in the womb I knew you, before you were born I set you apart.", ref: "Jeremiah 1:5" },
+  { text: "Peace I leave with you; my peace I give you. Do not let your hearts be troubled.", ref: "John 14:27" },
+  { text: "Let us not become weary in doing good, for at the proper time we will reap a harvest.", ref: "Galatians 6:9" },
+  { text: "If God is for us, who can be against us?", ref: "Romans 8:31" },
+  { text: "The Lord bless you and keep you; the Lord make his face shine on you.", ref: "Numbers 6:24-25" },
+  { text: "Create in me a pure heart, O God, and renew a steadfast spirit within me.", ref: "Psalm 51:10" },
+  { text: "I sought the Lord, and he answered me; he delivered me from all my fears.", ref: "Psalm 34:4" },
+  { text: "Even though I walk through the darkest valley, I will fear no evil, for you are with me.", ref: "Psalm 23:4" },
+  { text: "Ask and it will be given to you; seek and you will find; knock and the door will be opened.", ref: "Matthew 7:7" },
+  { text: "Do not conform to the pattern of this world, but be transformed by the renewing of your mind.", ref: "Romans 12:2" },
+  { text: "The steadfast love of the Lord never ceases; his mercies never come to an end.", ref: "Lamentations 3:22" },
+  { text: "Taste and see that the Lord is good; blessed is the one who takes refuge in him.", ref: "Psalm 34:8" },
+  { text: "Have I not commanded you? Be strong and courageous.", ref: "Joshua 1:9" },
+  { text: "Blessed is the one who does not walk in step with the wicked.", ref: "Psalm 1:1" },
+  { text: "For I am the Lord your God who takes hold of your right hand and says, do not fear.", ref: "Isaiah 41:13" },
+  { text: "Let the morning bring me word of your unfailing love, for I have put my trust in you.", ref: "Psalm 143:8" },
+  { text: "You are the light of the world. A town built on a hill cannot be hidden.", ref: "Matthew 5:14" },
+  { text: "This is the day the Lord has made; let us rejoice and be glad in it.", ref: "Psalm 118:24" },
+  { text: "My grace is sufficient for you, for my power is made perfect in weakness.", ref: "2 Corinthians 12:9" },
+  { text: "Love the Lord your God with all your heart and with all your soul and with all your mind.", ref: "Matthew 22:37" },
+  { text: "The Lord is close to the brokenhearted and saves those who are crushed in spirit.", ref: "Psalm 34:18" },
+  { text: "Therefore, if anyone is in Christ, the new creation has come: the old has gone, the new is here!", ref: "2 Corinthians 5:17" },
 ];
 
 function buildTickerText() {
   return VERSES.map(v => `${v.text}  ✦  ${v.ref}  　　　`).join('　　　✦✦✦　　　');
 }
 
-const SPEED_DURATIONS = { 1:140, 2:80, 3:50, 4:28, 5:14 };
+const SPEED_DURATIONS = { 1:300, 2:200, 3:130, 4:70, 5:35 };
 let versePaused = false;
 
 function initTicker() {
@@ -645,10 +693,31 @@ function toggleDone(qid,i){
   save(); renderQuadrant(QUADRANTS.find(q=>q.id===qid)); renderStats();
 }
 function deleteTask(qid,i){
-  pushUndo({type:'delete',qid,index:i,task:{...data[qid][i]}});
+  var taskEl = document.querySelector('.task-item[data-qid="'+qid+'"][data-idx="'+i+'"]');
+  if (!taskEl) return;
+  var actionsEl = taskEl.querySelector('.task-actions');
+  if (!actionsEl) return;
+  actionsEl.innerHTML = '<div class="task-confirm-wrap"><span>Delete?</span>'
+    + '<button class="btn-sure" onclick="confirmDelete(\'' + qid + '\',' + i + ')">Sure</button>'
+    + '<button class="btn-cancel" onclick="cancelDelete(\'' + qid + '\',' + i + ')">Cancel</button></div>';
+  taskEl._cancelTimer = setTimeout(function(){ cancelDelete(qid,i); }, 4000);
+}
+
+function confirmDelete(qid,i){
+  var taskEl = document.querySelector('.task-item[data-qid="'+qid+'"][data-idx="'+i+'"]');
+  if (taskEl) clearTimeout(taskEl._cancelTimer);
+  pushUndo({type:'delete',qid:qid,index:i,task:Object.assign({},data[qid][i])});
   data[qid].splice(i,1);
-  save(); renderQuadrant(QUADRANTS.find(q=>q.id===qid)); renderStats();
+  save(); renderQuadrant(QUADRANTS.find(function(q){return q.id===qid;})); renderStats();
   showToast('Task deleted — press ↩ Undo to restore','info');
+}
+
+function cancelDelete(qid,i){
+  var taskEl = document.querySelector('.task-item[data-qid="'+qid+'"][data-idx="'+i+'"]');
+  if (!taskEl) return;
+  clearTimeout(taskEl._cancelTimer);
+  var actionsEl = taskEl.querySelector('.task-actions');
+  if (actionsEl) actionsEl.innerHTML = '<button class="task-del" onclick="deleteTask(\'' + qid + '\',' + i + ')" title="Delete">&#x2715;</button>';
 }
 function clearDone(){ Object.keys(data).forEach(k=>{data[k]=data[k].filter(t=>!t.done);}); save(); renderAll(); }
 function handleKey(e,qid){ if(e.key==='Enter') addTask(qid); }

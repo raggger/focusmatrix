@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus Matrix</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=Lora:ital@1&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ── */
+:root {
+  --q1:#c0392b; --q1-light:#fadbd8; --q1-text:#7b241c;
+  --q2:#1a6b3c; --q2-light:#d5f5e3; --q2-text:#1a5232;
+  --q3:#d4830a; --q3-light:#fdebd0; --q3-text:#784212;
+  --q4:#5d6d7e; --q4-light:#eaecee; --q4-text:#2c3e50;
+  --bg:#f5f0e8; --card:rgba(255,255,255,0.88); --card-solid:#ffffff;
+  --border:rgba(0,0,0,0.08); --text:#1a1a1a; --text-muted:#888;
+  --input-bg:rgba(255,255,255,0.8); --task-bg:rgba(255,255,255,0.7);
+  --task-hover:rgba(255,255,255,0.95); --btn-bg:white; --btn-hover:#f0ebe0;
+  --shadow:0 4px 24px rgba(0,0,0,0.10);
+  --font-display:'Playfair Display',serif; --font-body:'DM Sans',sans-serif; --font-verse:'Lora',serif;
+}
+[data-theme="dark"] {
+  --bg:#0f1117; --card:rgba(22,26,35,0.92); --card-solid:#161a23;
+  --border:rgba(255,255,255,0.09); --text:#e8e4da; --text-muted:#666;
+  --input-bg:rgba(255,255,255,0.06); --task-bg:rgba(255,255,255,0.04);
+  --task-hover:rgba(255,255,255,0.09); --btn-bg:#1e2230; --btn-hover:#252b3b;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+  --q1-light:rgba(192,57,43,0.18); --q1-text:#e8877f;
+  --q2-light:rgba(26,107,60,0.18);  --q2-text:#6fcf97;
+  --q3-light:rgba(212,131,10,0.18); --q3-text:#f0a742;
+  --q4-light:rgba(93,109,126,0.18); --q4-text:#98a8b8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+
+/* ── SIGN-IN PAGE ── */
+#signin-page {
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg);transition:background .3s;
+}
+.signin-card {
+  background:var(--card-solid);border-radius:24px;padding:48px 44px;
+  width:420px;max-width:92vw;
+  box-shadow:0 24px 64px rgba(0,0,0,0.13);
+  border:1.5px solid var(--border);
+  animation:fadeUp .45s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.signin-cross {
+  text-align:center;font-size:2rem;margin-bottom:6px;opacity:0.7;
+}
+.signin-card h2 {
+  font-family:var(--font-display);font-size:1.9rem;text-align:center;
+  color:var(--text);margin-bottom:4px;
+}
+.signin-card .signin-sub {
+  font-size:0.8rem;color:var(--text-muted);text-align:center;
+  letter-spacing:0.07em;text-transform:uppercase;margin-bottom:32px;
+}
+.signin-label {
+  font-size:0.8rem;color:var(--text-muted);letter-spacing:0.06em;
+  text-transform:uppercase;margin-bottom:6px;display:block;
+}
+.signin-input {
+  width:100%;padding:12px 16px;border-radius:12px;
+  border:1.5px solid var(--border);font-family:var(--font-body);
+  font-size:1rem;background:var(--input-bg);color:var(--text);
+  outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:20px;
+}
+.signin-input:focus {
+  border-color:#3498db;box-shadow:0 0 0 3px rgba(52,152,219,0.15);
+}
+.signin-input::placeholder{color:var(--text-muted);}
+.signin-btn {
+  width:100%;padding:13px;border-radius:12px;border:none;
+  background:var(--text);color:var(--bg);font-family:var(--font-display);
+  font-size:1.05rem;font-weight:700;cursor:pointer;
+  transition:opacity .18s,transform .1s;margin-top:4px;
+}
+.signin-btn:hover{opacity:0.85;transform:translateY(-1px);}
+.signin-btn:active{transform:translateY(0);}
+.signin-verse-preview {
+  margin-top:22px;padding-top:18px;border-top:1px solid var(--border);
+  font-family:var(--font-verse);font-style:italic;font-size:0.82rem;
+  color:var(--text-muted);text-align:center;line-height:1.6;
+}
+
+/* ── BG LAYER ── */
+#bg-layer{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;opacity:0;pointer-events:none;transition:opacity .4s;}
+
+/* ── MAIN APP ── */
+.app-wrap{position:relative;z-index:1;padding:24px 20px 40px;max-width:1200px;margin:0 auto;}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.brand h1{font-family:var(--font-display);font-size:2rem;color:var(--text);line-height:1;}
+.brand p{font-size:0.8rem;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;}
+.header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--btn-bg);font-family:var(--font-body);font-size:0.82rem;cursor:pointer;font-weight:500;color:var(--text);transition:all .18s;white-space:nowrap;}
+.btn:hover{background:var(--btn-hover);}
+.btn-primary{background:var(--text);color:var(--bg);border-color:var(--text);}
+.btn-primary:hover{opacity:.85;}
+.theme-wrap{display:flex;align-items:center;gap:7px;}
+.toggle-label{font-size:1rem;}
+.theme-toggle{width:46px;height:26px;border-radius:13px;border:1.5px solid var(--border);background:var(--btn-bg);cursor:pointer;position:relative;transition:background .3s;flex-shrink:0;}
+.theme-toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--text);transition:transform .25s,background .3s;}
+[data-theme="dark"] .theme-toggle::after{transform:translateX(20px);}
+
+/* ── BIBLE VERSE TICKER ── */
+.verse-ticker-wrap {
+  overflow:hidden;white-space:nowrap;
+  margin-bottom:8px;
+  padding:7px 0;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.verse-ticker-wrap::before,.verse-ticker-wrap::after {
+  content:'';position:absolute;top:0;bottom:0;width:48px;z-index:2;pointer-events:none;
+}
+.verse-ticker-wrap::before{left:0;background:linear-gradient(to right,var(--bg),transparent);}
+.verse-ticker-wrap::after{right:0;background:linear-gradient(to left,var(--bg),transparent);}
+.verse-ticker {
+  display:inline-block;
+  animation:tickerScroll var(--ticker-duration,80s) linear infinite;
+  font-family:var(--font-verse);font-style:italic;
+  font-size:0.82rem;color:var(--text-muted);
+  padding-left:100%;
+}
+.verse-ticker:hover{animation-play-state:paused;}
+@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+/* speed control */
+.verse-speed-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.verse-speed-wrap label{font-size:0.5rem;color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;opacity:0.7;}
+.verse-speed-slider{-webkit-appearance:none;appearance:none;width:36px;height:2px;border-radius:2px;background:var(--border);outline:none;cursor:pointer;}
+.verse-speed-slider::-webkit-slider-thumb{-webkit-appearance:none;width:6px;height:6px;border-radius:50%;background:var(--text-muted);cursor:pointer;transition:background .15s;}
+.verse-speed-slider::-webkit-slider-thumb:hover{background:var(--text);}
+.verse-pause-btn{background:none;border:1px solid var(--border);border-radius:3px;padding:0px 4px;font-size:0.5rem;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);transition:all .15s;white-space:nowrap;opacity:0.7;line-height:1.6;}
+.verse-pause-btn:hover{opacity:1;border-color:var(--text-muted);}
+.verse-ref{font-style:normal;font-family:var(--font-body);font-size:0.75rem;opacity:0.6;margin-left:6px;}
+
+/* AXIS */
+.matrix-container{position:relative;}
+.axis-label-x{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;display:flex;justify-content:space-between;padding:0 4px;}
+.axis-label-y-wrap{display:flex;align-items:stretch;}
+.axis-label-y{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between;padding:4px 0;min-width:20px;margin-right:8px;}
+
+/* GRID */
+.matrix-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;}
+.quadrant{background:var(--card);backdrop-filter:blur(8px);border-radius:16px;border:1.5px solid var(--border);box-shadow:var(--shadow);padding:16px;min-height:260px;display:flex;flex-direction:column;transition:box-shadow .2s,border-color .2s;}
+.quadrant.drag-over{border-color:#3498db!important;box-shadow:0 0 0 3px rgba(52,152,219,0.2),var(--shadow)!important;}
+.q-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.q-title{font-family:var(--font-display);font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.q-badge{font-size:.65rem;font-family:var(--font-body);font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;}
+.q1 .q-title{color:var(--q1-text);} .q1 .q-badge{background:var(--q1-light);color:var(--q1-text);}
+.q2 .q-title{color:var(--q2-text);} .q2 .q-badge{background:var(--q2-light);color:var(--q2-text);}
+.q3 .q-title{color:var(--q3-text);} .q3 .q-badge{background:var(--q3-light);color:var(--q3-text);}
+.q4 .q-title{color:var(--q4-text);} .q4 .q-badge{background:var(--q4-light);color:var(--q4-text);}
+.q-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.q1 .q-dot{background:var(--q1);} .q2 .q-dot{background:var(--q2);}
+.q3 .q-dot{background:var(--q3);} .q4 .q-dot{background:var(--q4);}
+
+/* TASKS */
+.task-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:320px;min-height:40px;}
+.task-list.drag-active{background:rgba(52,152,219,0.04);border-radius:8px;}
+.task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:10px;background:var(--task-bg);border:1px solid var(--border);font-size:.85rem;line-height:1.4;transition:background .15s,opacity .15s,transform .15s;cursor:grab;user-select:none;}
+.task-item:hover{background:var(--task-hover);}
+.task-item.dragging{opacity:.35;cursor:grabbing;transform:scale(.97);}
+.drag-handle{color:var(--text-muted);font-size:12px;cursor:grab;opacity:0;transition:opacity .15s;flex-shrink:0;margin-top:2px;padding:0 2px;}
+.task-item:hover .drag-handle{opacity:1;}
+.task-check{width:16px;height:16px;border-radius:4px;border:1.5px solid #888;flex-shrink:0;cursor:pointer;margin-top:1px;appearance:none;background:transparent;transition:all .15s;}
+.task-check:checked{background:var(--text);border-color:var(--text);}
+.task-check:checked::after{content:'✓';display:block;color:var(--bg);font-size:10px;text-align:center;line-height:14px;}
+.task-text{flex:1;word-break:break-word;color:var(--text);}
+.task-text.done{text-decoration:line-through;color:var(--text-muted);}
+.task-url{display:inline-block;font-size:.75rem;color:#3498db;text-decoration:none;border-bottom:1px dashed #3498db;cursor:pointer;word-break:break-all;margin-top:2px;}
+.task-url:hover{color:#1a6ea8;}
+.task-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;flex-shrink:0;}
+.task-item:hover .task-actions{opacity:1;}
+.task-del{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px;line-height:1;transition:color .15s;}
+.task-del:hover{color:#e74c3c;}
+
+/* ADD */
+.add-task-form{display:flex;flex-direction:column;gap:6px;}
+.add-row{display:flex;gap:6px;}
+.task-input{flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font-body);font-size:.83rem;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .15s;}
+.task-input:focus{border-color:#999;}
+.url-input{width:100%;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font-body);font-size:.78rem;background:var(--input-bg);color:#3498db;outline:none;transition:border-color .15s;}
+.url-input::placeholder{color:#3498db88;}
+.url-input:focus{border-color:#3498db;}
+.add-btn{padding:7px 12px;border-radius:8px;border:none;font-size:1rem;cursor:pointer;font-weight:700;color:white;flex-shrink:0;transition:opacity .15s;}
+.q1 .add-btn{background:var(--q1);} .q2 .add-btn{background:var(--q2);}
+.q3 .add-btn{background:var(--q3);} .q4 .add-btn{background:var(--q4);}
+.add-btn:hover{opacity:.82;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--card-solid);border-radius:18px;padding:28px;width:380px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);transform:translateY(20px);transition:transform .2s;border:1.5px solid var(--border);}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal h2{font-family:var(--font-display);font-size:1.3rem;margin-bottom:18px;color:var(--text);}
+.modal label{font-size:.82rem;color:var(--text-muted);display:block;margin-bottom:4px;margin-top:14px;}
+.modal input[type=text],.modal input[type=url]{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font-body);font-size:.9rem;outline:none;background:var(--input-bg);color:var(--text);}
+.modal input:focus{border-color:#888;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.modal-note{font-size:.78rem;color:var(--text-muted);margin-top:10px;}
+#bg-url-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font-body);font-size:.87rem;outline:none;margin-top:6px;background:var(--input-bg);color:var(--text);}
+.bg-preview{margin-top:10px;width:100%;height:80px;border-radius:8px;background-size:cover;background-position:center;background-color:var(--task-bg);border:1px solid var(--border);}
+
+/* STATS */
+.stats-bar{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--text-muted);}
+.stat{display:flex;align-items:center;gap:5px;}
+.stat-dot{width:8px;height:8px;border-radius:50%;}
+.task-list::-webkit-scrollbar{width:4px;}
+.task-list::-webkit-scrollbar-track{background:transparent;}
+.task-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+@media(max-width:640px){
+  .matrix-grid{grid-template-columns:1fr;}
+  .brand h1{font-size:1.5rem;}
+  .axis-label-y-wrap{flex-direction:column;}
+  .axis-label-y{writing-mode:horizontal-tb;transform:none;flex-direction:row;min-width:unset;margin-right:0;margin-bottom:4px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── SIGN-IN PAGE ── -->
+<div id="signin-page">
+  <div class="signin-card">
+    <div class="signin-cross">✝</div>
+    <h2>Welcome</h2>
+    <p class="signin-sub">Your Personal Focus Board</p>
+
+    <label class="signin-label" for="si-name">Your Name</label>
+    <input class="signin-input" id="si-name" type="text" placeholder="e.g. David" maxlength="40" autocomplete="off">
+
+    <label class="signin-label" for="si-motto">Your Motto</label>
+    <input class="signin-input" id="si-motto" type="text" placeholder="e.g. Do all things with purpose" maxlength="80" autocomplete="off">
+
+    <button class="signin-btn" onclick="signIn()">Enter My Board →</button>
+
+    <div class="signin-verse-preview" id="signin-verse"></div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app" style="display:none;">
+  <div id="bg-layer"></div>
+  <div class="app-wrap">
+    <header>
+      <div class="brand">
+        <h1 id="brand-name">Focus Matrix</h1>
+        <p id="brand-motto">Covey Time Management</p>
+      </div>
+      <div class="header-actions">
+        <div class="stats-bar" id="stats-bar"></div>
+        <div class="theme-wrap">
+          <span class="toggle-label" id="theme-label">☀️</span>
+          <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode"></button>
+        </div>
+        <span id="save-status" style="font-size:.75rem;color:var(--text-muted);opacity:0;transition:opacity .4s;">✓ Saved</span>
+        <button class="btn" id="undo-btn" onclick="undoLast()" title="Undo last delete" style="opacity:.35;">↩ Undo</button>
+        <button class="btn" onclick="openBgModal()">🖼 Background</button>
+        <button class="btn" onclick="clearDone()">✓ Clear Done</button>
+        <button class="btn btn-primary" onclick="exportData()">⬇ Export</button>
+        <button class="btn" onclick="signOut()" title="Change name / motto" style="font-size:0.75rem;padding:6px 10px;">✎ Profile</button>
+      </div>
+    </header>
+
+    <!-- Bible Verse Ticker -->
+    <div style="display:flex;align-items:center;gap:0;margin-bottom:8px;">
+      <div class="verse-ticker-wrap" style="flex:1;margin-bottom:0;">
+        <div class="verse-ticker" id="verse-ticker"></div>
+      </div>
+      <div class="verse-speed-wrap" style="padding-left:12px;">
+        <label for="verse-speed">Speed</label>
+        <input type="range" class="verse-speed-slider" id="verse-speed" min="1" max="5" step="1" value="2" oninput="setVerseSpeed(this.value)">
+        <button class="verse-pause-btn" id="verse-pause-btn" onclick="toggleVersePause()">&#9646;&#9646; Pause</button>
+      </div>
+    </div>
+
+    <div class="matrix-container">
+      <div class="axis-label-x">
+        <span>← Not Urgent</span>
+        <span style="flex:1;text-align:center;">— Urgency →</span>
+        <span>Urgent →</span>
+      </div>
+      <div class="axis-label-y-wrap">
+        <div class="axis-label-y">
+          <span>↑ Important</span>
+          <span>Not Important ↓</span>
+        </div>
+        <div class="matrix-grid" id="matrix-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BG Modal -->
+<div class="modal-overlay" id="bg-modal">
+  <div class="modal">
+    <h2>🖼 Background Image</h2>
+    <label>Paste an image URL</label>
+    <input type="url" id="bg-url-input" placeholder="https://example.com/photo.jpg" oninput="previewBg()">
+    <div class="bg-preview" id="bg-preview"></div>
+    <label>Or upload a file</label>
+    <input type="file" accept="image/*" onchange="uploadBg(event)">
+    <p class="modal-note">Tip: Use Unsplash, Pexels, or any direct image URL.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="clearBg()">Remove</button>
+      <button class="btn" onclick="closeBgModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="applyBg()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   BIBLE VERSES
+════════════════════════════════════════ */
+const VERSES = [
+  { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
+  { text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you.", ref: "Jeremiah 29:11" },
+  { text: "Trust in the Lord with all your heart and lean not on your own understanding.", ref: "Proverbs 3:5" },
+  { text: "Commit to the Lord whatever you do, and he will establish your plans.", ref: "Proverbs 16:3" },
+  { text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you.", ref: "Joshua 1:9" },
+  { text: "Whatever you do, work at it with all your heart, as working for the Lord.", ref: "Colossians 3:23" },
+  { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
+  { text: "Seek first his kingdom and his righteousness, and all these things will be given to you.", ref: "Matthew 6:33" },
+  { text: "In all your ways submit to him, and he will make your paths straight.", ref: "Proverbs 3:6" },
+  { text: "Now to him who is able to do immeasurably more than all we ask or imagine.", ref: "Ephesians 3:20" },
+  { text: "Cast all your anxiety on him because he cares for you.", ref: "1 Peter 5:7" },
+  { text: "The heart of man plans his way, but the Lord establishes his steps.", ref: "Proverbs 16:9" },
+];
+
+function buildTickerText() {
+  return VERSES.map(v => `${v.text}  ✦  ${v.ref}  　　　`).join('　　　✦✦✦　　　');
+}
+
+const SPEED_DURATIONS = { 1:140, 2:80, 3:50, 4:28, 5:14 };
+let versePaused = false;
+
+function initTicker() {
+  const el = document.getElementById('verse-ticker');
+  if (!el) return;
+  el.textContent = buildTickerText();
+  const saved = parseInt(LS.get('covey_verse_speed','2'));
+  const slider = document.getElementById('verse-speed');
+  if (slider) slider.value = saved;
+  applyVerseSpeed(saved);
+}
+
+function applyVerseSpeed(level) {
+  const dur = SPEED_DURATIONS[level] || 80;
+  const wrap = document.querySelector('.verse-ticker-wrap');
+  if (wrap) wrap.style.setProperty('--ticker-duration', dur + 's');
+  const el = document.getElementById('verse-ticker');
+  if (!el) return;
+  el.style.animation = 'none';
+  void el.offsetHeight;
+  el.style.animation = '';
+  if (versePaused) el.style.animationPlayState = 'paused';
+}
+
+function setVerseSpeed(val) {
+  LS.set('covey_verse_speed', val);
+  applyVerseSpeed(parseInt(val));
+}
+
+function toggleVersePause() {
+  versePaused = !versePaused;
+  const el = document.getElementById('verse-ticker');
+  const btn = document.getElementById('verse-pause-btn');
+  if (el) el.style.animationPlayState = versePaused ? 'paused' : 'running';
+  if (btn) btn.innerHTML = versePaused ? '&#9654; Resume' : '&#9646;&#9646; Pause';
+}
+
+function initSigninVerse() {
+  const v = VERSES[Math.floor(Math.random() * VERSES.length)];
+  const el = document.getElementById('signin-verse');
+  if (el) el.innerHTML = `"${v.text}"<br><span style="font-style:normal;font-size:0.74rem;opacity:0.6;font-family:var(--font-body);">— ${v.ref}</span>`;
+}
+
+/* ════════════════════════════════════════
+   SAFE LOCALSTORAGE
+════════════════════════════════════════ */
+const LS = {
+  get(key, fallback=null) {
+    try { const v=localStorage.getItem(key); return v!==null?v:fallback; } catch(e){ return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key,value); return true; }
+    catch(e){ showToast('⚠️ Storage full! Export your data now.','warn',6000); return false; }
+  },
+  remove(key){ try{localStorage.removeItem(key);}catch(e){} }
+};
+
+/* ════════════════════════════════════════
+   DATA
+════════════════════════════════════════ */
+const EMPTY_DATA = {q1:[],q2:[],q3:[],q4:[]};
+const QUADRANTS = [
+  {id:'q1',label:'Q1 — Do First', badge:'Urgent & Important'},
+  {id:'q2',label:'Q2 — Schedule', badge:'Not Urgent & Important'},
+  {id:'q3',label:'Q3 — Delegate', badge:'Urgent & Not Important'},
+  {id:'q4',label:'Q4 — Eliminate',badge:'Not Urgent & Not Important'},
+];
+
+function loadData() {
+  try {
+    const raw=LS.get('covey_data');
+    if(!raw) return JSON.parse(JSON.stringify(EMPTY_DATA));
+    const p=JSON.parse(raw);
+    if(!['q1','q2','q3','q4'].every(k=>Array.isArray(p[k]))) throw new Error();
+    return p;
+  } catch(e) {
+    try {
+      const b=LS.get('covey_data_backup');
+      if(b){ showToast('⚠️ Data restored from backup.','warn',5000); return JSON.parse(b); }
+    } catch(e2){}
+    return JSON.parse(JSON.stringify(EMPTY_DATA));
+  }
+}
+
+let data      = loadData();
+let bgImage   = LS.get('covey_bg','');
+let darkMode  = LS.get('covey_dark')==='true';
+let pendingBg = '';
+let dragSrc   = null;
+let undoStack = [];
+let draftTimers = {};
+
+/* ════════════════════════════════════════
+   SIGN IN / OUT
+════════════════════════════════════════ */
+function signIn() {
+  const nameVal  = document.getElementById('si-name').value.trim();
+  const mottoVal = document.getElementById('si-motto').value.trim();
+  if (!nameVal) {
+    document.getElementById('si-name').focus();
+    document.getElementById('si-name').style.borderColor='#e74c3c';
+    return;
+  }
+  LS.set('covey_name', nameVal);
+  LS.set('covey_motto', mottoVal || 'Covey Time Management');
+  applyProfile(nameVal, mottoVal || 'Covey Time Management');
+  document.getElementById('signin-page').style.display='none';
+  document.getElementById('app').style.display='block';
+  initTicker();
+}
+
+function applyProfile(name, motto) {
+  document.getElementById('brand-name').textContent  = name;
+  document.getElementById('brand-motto').textContent = motto || 'Covey Time Management';
+  document.title = name + "'s Focus Matrix";
+}
+
+function signOut() {
+  // Prefill from saved values
+  document.getElementById('si-name').value  = LS.get('covey_name','');
+  document.getElementById('si-motto').value = LS.get('covey_motto','');
+  document.getElementById('app').style.display='none';
+  document.getElementById('signin-page').style.display='flex';
+  initSigninVerse();
+}
+
+function checkExistingProfile() {
+  const name  = LS.get('covey_name','');
+  const motto = LS.get('covey_motto','');
+  if (name) {
+    applyProfile(name, motto);
+    document.getElementById('signin-page').style.display='none';
+    document.getElementById('app').style.display='block';
+    initTicker();
+  } else {
+    initSigninVerse();
+  }
+}
+
+// Allow Enter key on sign-in inputs
+document.getElementById('si-name').addEventListener('keydown', e => {
+  if(e.key==='Enter') document.getElementById('si-motto').focus();
+});
+document.getElementById('si-motto').addEventListener('keydown', e => {
+  if(e.key==='Enter') signIn();
+});
+// Reset border color on input
+document.getElementById('si-name').addEventListener('input', e => {
+  e.target.style.borderColor='';
+});
+
+/* ════════════════════════════════════════
+   THEME
+════════════════════════════════════════ */
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', darkMode?'dark':'');
+  const lbl=document.getElementById('theme-label');
+  if(lbl) lbl.textContent=darkMode?'🌙':'☀️';
+  LS.set('covey_dark',darkMode);
+}
+function toggleTheme(){ darkMode=!darkMode; applyTheme(); applyBgLayer(); }
+
+/* ════════════════════════════════════════
+   SAVE
+════════════════════════════════════════ */
+function save() {
+  const json=JSON.stringify(data);
+  const ok=LS.set('covey_data',json);
+  if(ok) setTimeout(()=>LS.set('covey_data_backup',json),500);
+  showSaveIndicator();
+}
+
+/* ════════════════════════════════════════
+   DRAFTS
+════════════════════════════════════════ */
+function saveDraft(qid) {
+  clearTimeout(draftTimers[qid]);
+  draftTimers[qid]=setTimeout(()=>{
+    const ti=document.getElementById('input-'+qid);
+    const ui=document.getElementById('url-'+qid);
+    if(ti&&ti.value.trim()) LS.set('covey_draft_'+qid,JSON.stringify({text:ti.value,url:ui?ui.value:''}));
+    else LS.remove('covey_draft_'+qid);
+  },400);
+}
+function restoreDrafts() {
+  QUADRANTS.forEach(q=>{
+    try {
+      const raw=LS.get('covey_draft_'+q.id); if(!raw) return;
+      const d=JSON.parse(raw);
+      const ti=document.getElementById('input-'+q.id);
+      const ui=document.getElementById('url-'+q.id);
+      if(ti&&d.text){ ti.value=d.text; if(ui) ui.value=d.url||''; }
+    } catch(e){}
+  });
+}
+
+/* ════════════════════════════════════════
+   UNDO
+════════════════════════════════════════ */
+function pushUndo(action){ undoStack.push(action); if(undoStack.length>20) undoStack.shift(); updateUndoBtn(); }
+function undoLast() {
+  if(!undoStack.length) return;
+  const a=undoStack.pop();
+  if(a.type==='delete'){
+    data[a.qid].splice(a.index,0,a.task);
+    save();
+    renderQuadrant(QUADRANTS.find(q=>q.id===a.qid));
+    renderStats();
+    showToast('↩ Task restored','info');
+  }
+  updateUndoBtn();
+}
+function updateUndoBtn(){
+  const b=document.getElementById('undo-btn');
+  if(b) b.style.opacity=undoStack.length?'1':'0.35';
+}
+
+/* ════════════════════════════════════════
+   TOAST & SAVE INDICATOR
+════════════════════════════════════════ */
+let toastTimer, saveTimer;
+function showToast(msg,type='info',dur=2800){
+  let t=document.getElementById('toast');
+  if(!t){
+    t=document.createElement('div'); t.id='toast';
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-size:.84rem;font-family:var(--font-body);font-weight:500;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:opacity .3s;pointer-events:none;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  const c={info:['#1a1a1a','#fff'],warn:['#d4830a','#fff'],ok:['#1a6b3c','#fff']};
+  const [bg,fg]=c[type]||c.info;
+  t.style.background=bg; t.style.color=fg; t.textContent=msg; t.style.opacity='1';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{ t.style.opacity='0'; },dur);
+}
+function showSaveIndicator(){
+  const el=document.getElementById('save-status'); if(!el) return;
+  el.textContent='✓ Saved'; el.style.opacity='1';
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{ el.style.opacity='0'; },1800);
+}
+
+/* ════════════════════════════════════════
+   RENDER
+════════════════════════════════════════ */
+function renderAll(){ QUADRANTS.forEach(q=>renderQuadrant(q)); renderStats(); applyBgLayer(); }
+
+function renderQuadrant(q) {
+  const el=document.getElementById('quad-'+q.id); if(!el) return;
+  const list=el.querySelector('.task-list');
+  list.innerHTML='';
+  (data[q.id]||[]).forEach((task,i)=>{
+    const div=document.createElement('div');
+    div.className='task-item'; div.draggable=true;
+    div.dataset.qid=q.id; div.dataset.idx=i;
+    div.innerHTML=`
+      <span class="drag-handle" title="Drag to move">⠿</span>
+      <input type="checkbox" class="task-check" ${task.done?'checked':''} onchange="toggleDone('${q.id}',${i})">
+      <div class="task-text ${task.done?'done':''}">
+        ${escHtml(task.text)}
+        ${task.url?`<br><a class="task-url" href="${escHtml(task.url)}" target="_blank" rel="noopener">🔗 ${shortUrl(task.url)}</a>`:''}
+      </div>
+      <div class="task-actions">
+        <button class="task-del" onclick="deleteTask('${q.id}',${i})" title="Delete">✕</button>
+      </div>`;
+    div.addEventListener('dragstart',e=>{
+      dragSrc={qid:q.id,index:i};
+      setTimeout(()=>div.classList.add('dragging'),0);
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain','');
+    });
+    div.addEventListener('dragend',()=>{
+      div.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));
+      document.querySelectorAll('.task-list').forEach(x=>x.classList.remove('drag-active'));
+    });
+    list.appendChild(div);
+  });
+}
+
+function renderStats(){
+  const bar=document.getElementById('stats-bar'); if(!bar) return;
+  const colors={q1:'var(--q1)',q2:'var(--q2)',q3:'var(--q3)',q4:'var(--q4)'};
+  bar.innerHTML=Object.entries(data).map(([k,v])=>{
+    const done=v.filter(t=>t.done).length;
+    return `<div class="stat"><div class="stat-dot" style="background:${colors[k]}"></div>${done}/${v.length}</div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   TASK ACTIONS
+════════════════════════════════════════ */
+function addTask(qid){
+  const ti=document.getElementById('input-'+qid);
+  const ui=document.getElementById('url-'+qid);
+  const text=ti.value.trim(); if(!text) return;
+  data[qid].push({text,url:ui.value.trim(),done:false,created:Date.now()});
+  save(); ti.value=''; ui.value='';
+  LS.remove('covey_draft_'+qid);
+  renderQuadrant(QUADRANTS.find(q=>q.id===qid)); renderStats();
+}
+function toggleDone(qid,i){
+  data[qid][i].done=!data[qid][i].done;
+  save(); renderQuadrant(QUADRANTS.find(q=>q.id===qid)); renderStats();
+}
+function deleteTask(qid,i){
+  pushUndo({type:'delete',qid,index:i,task:{...data[qid][i]}});
+  data[qid].splice(i,1);
+  save(); renderQuadrant(QUADRANTS.find(q=>q.id===qid)); renderStats();
+  showToast('Task deleted — press ↩ Undo to restore','info');
+}
+function clearDone(){ Object.keys(data).forEach(k=>{data[k]=data[k].filter(t=>!t.done);}); save(); renderAll(); }
+function handleKey(e,qid){ if(e.key==='Enter') addTask(qid); }
+
+/* ════════════════════════════════════════
+   DRAG & DROP
+════════════════════════════════════════ */
+function setupDropZones(){
+  document.querySelectorAll('.task-list').forEach(list=>{
+    list.addEventListener('dragover',e=>{
+      e.preventDefault(); e.dataTransfer.dropEffect='move';
+      list.classList.add('drag-active');
+      list.closest('.quadrant').classList.add('drag-over');
+    });
+    list.addEventListener('dragleave',e=>{
+      if(!list.contains(e.relatedTarget)){
+        list.classList.remove('drag-active');
+        list.closest('.quadrant').classList.remove('drag-over');
+      }
+    });
+    list.addEventListener('drop',e=>{
+      e.preventDefault(); if(!dragSrc) return;
+      const targetQid=list.closest('.quadrant').id.replace('quad-','');
+      const afterEl=getDragAfterElement(list,e.clientY);
+      const [task]=data[dragSrc.qid].splice(dragSrc.index,1);
+      if(afterEl===null){ data[targetQid].push(task); }
+      else {
+        let idx=parseInt(afterEl.dataset.idx);
+        if(dragSrc.qid===targetQid&&dragSrc.index<idx) idx--;
+        data[targetQid].splice(idx,0,task);
+      }
+      dragSrc=null; save();
+      list.classList.remove('drag-active');
+      list.closest('.quadrant').classList.remove('drag-over');
+      renderAll();
+    });
+  });
+}
+function getDragAfterElement(container,y){
+  const items=[...container.querySelectorAll('.task-item:not(.dragging)')];
+  return items.reduce((closest,child)=>{
+    const box=child.getBoundingClientRect();
+    const offset=y-box.top-box.height/2;
+    if(offset<0&&offset>(closest.offset??-Infinity)) return{offset,element:child};
+    return closest;
+  },{}).element??null;
+}
+
+/* ════════════════════════════════════════
+   BACKGROUND
+════════════════════════════════════════ */
+function openBgModal(){
+  pendingBg=bgImage;
+  document.getElementById('bg-url-input').value=bgImage.startsWith('http')?bgImage:'';
+  document.getElementById('bg-preview').style.backgroundImage=bgImage?`url(${bgImage})`:'';
+  document.getElementById('bg-modal').classList.add('open');
+}
+function closeBgModal(){ document.getElementById('bg-modal').classList.remove('open'); }
+function previewBg(){
+  pendingBg=document.getElementById('bg-url-input').value.trim();
+  document.getElementById('bg-preview').style.backgroundImage=pendingBg?`url(${pendingBg})`:'';
+}
+function uploadBg(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ pendingBg=ev.target.result; document.getElementById('bg-preview').style.backgroundImage=`url(${pendingBg})`; };
+  reader.readAsDataURL(file);
+}
+function applyBg(){ bgImage=pendingBg; LS.set('covey_bg',bgImage); applyBgLayer(); closeBgModal(); }
+function clearBg(){
+  pendingBg=bgImage=''; LS.remove('covey_bg');
+  document.getElementById('bg-preview').style.backgroundImage='';
+  document.getElementById('bg-url-input').value='';
+  applyBgLayer(); closeBgModal();
+}
+function applyBgLayer(){
+  const layer=document.getElementById('bg-layer'); if(!layer) return;
+  layer.style.backgroundImage=bgImage?`url(${bgImage})`:'';
+  layer.style.opacity=bgImage?(darkMode?'0.12':'0.22'):'0';
+}
+
+/* ════════════════════════════════════════
+   EXPORT
+════════════════════════════════════════ */
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='covey-matrix.json'; a.click();
+}
+
+/* ════════════════════════════════════════
+   UTILS
+════════════════════════════════════════ */
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function shortUrl(url){
+  try{ const u=new URL(url); return u.hostname+(u.pathname!=='/'?u.pathname.slice(0,20):''); }
+  catch{ return url.slice(0,30); }
+}
+
+/* ════════════════════════════════════════
+   BUILD GRID
+════════════════════════════════════════ */
+function buildGrid(){
+  const grid=document.getElementById('matrix-grid');
+  grid.innerHTML=QUADRANTS.map(q=>`
+    <div class="quadrant ${q.id}" id="quad-${q.id}">
+      <div class="q-header">
+        <div class="q-title"><div class="q-dot"></div>${q.label}</div>
+        <span class="q-badge">${q.badge}</span>
+      </div>
+      <div class="task-list" id="list-${q.id}"></div>
+      <div class="add-task-form">
+        <div class="add-row">
+          <input type="text" class="task-input" id="input-${q.id}" placeholder="Add task…" onkeydown="handleKey(event,'${q.id}')">
+          <button class="add-btn" onclick="addTask('${q.id}')">+</button>
+        </div>
+        <input type="url" class="url-input" id="url-${q.id}" placeholder="Optional: paste a URL (https://…)">
+      </div>
+    </div>`).join('');
+  setupDropZones();
+}
+
+/* ════════════════════════════════════════
+   VISIBILITY RECOVERY
+════════════════════════════════════════ */
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden){ try{ data=loadData(); renderAll(); }catch(e){} }
+});
+
+/* ════════════════════════════════════════
+   GLOBAL ERROR HANDLER
+════════════════════════════════════════ */
+window.addEventListener('error',()=>showToast('Something went wrong — your data is safe','warn',5000));
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+applyTheme();
+buildGrid();
+renderAll();
+restoreDrafts();
+updateUndoBtn();
+checkExistingProfile();
+
+QUADRANTS.forEach(q=>{
+  const ti=document.getElementById('input-'+q.id);
+  const ui=document.getElementById('url-'+q.id);
+  if(ti) ti.addEventListener('input',()=>saveDraft(q.id));
+  if(ui) ui.addEventListener('input',()=>saveDraft(q.id));
+});
+
+document.getElementById('bg-modal').addEventListener('click',function(e){ if(e.target===this) closeBgModal(); });
+</script>
+</body>
+</html>

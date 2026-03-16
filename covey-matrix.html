@@ -90,7 +90,11 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 #bg-layer{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;opacity:0;pointer-events:none;transition:opacity .4s;}
 
 /* ── MAIN APP ── */
-.app-wrap{position:relative;z-index:1;padding:24px 20px 40px;max-width:1200px;margin:0 auto;}
+.app-layout{position:relative;z-index:1;}
+.app-wrap{padding:24px 20px 40px;max-width:1200px;margin:0 auto;transition:all .35s cubic-bezier(.4,0,.2,1);}
+.app-layout.np-open{display:flex;align-items:flex-start;}
+.app-layout.np-open .app-wrap{flex:1;max-width:48%;margin:0;min-width:0;}
+@media(max-width:900px){.app-layout.np-open .app-wrap{max-width:100%;}}
 
 /* HEADER */
 header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
@@ -228,6 +232,46 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
   .axis-label-y-wrap{flex-direction:column;}
   .axis-label-y{writing-mode:horizontal-tb;transform:none;flex-direction:row;min-width:unset;margin-right:0;margin-bottom:4px;}
 }
+
+/* ── NOTEPAD PANEL ── */
+#notepad-toggle{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:50;background:var(--card-solid);border:1.5px solid var(--border);border-right:none;border-radius:10px 0 0 10px;padding:10px 6px;cursor:pointer;writing-mode:vertical-rl;font-size:0.72rem;font-family:var(--font-body);color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;transition:all .35s;box-shadow:var(--shadow);}
+#notepad-toggle:hover{color:var(--text);background:var(--btn-hover);}
+#notepad-toggle.panel-open{right:calc(52vw - 8px);}
+#notepad-panel{position:fixed;top:0;right:0;width:0;height:100vh;z-index:48;background:var(--card-solid);border-left:1.5px solid var(--border);box-shadow:-4px 0 32px rgba(0,0,0,0.12);display:flex;flex-direction:column;overflow:hidden;transition:width .35s cubic-bezier(.4,0,.2,1);}
+#notepad-panel.open{width:52vw;min-width:340px;}
+@media(max-width:900px){#notepad-panel.open{width:100vw;}#notepad-toggle.panel-open{right:calc(100vw - 8px);}}
+.np-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.np-header h3{font-family:var(--font-display);font-size:1.1rem;color:var(--text);}
+.np-header-actions{display:flex;align-items:center;gap:8px;}
+.np-close{background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-muted);padding:2px 6px;border-radius:6px;transition:all .15s;}
+.np-close:hover{background:var(--btn-hover);color:var(--text);}
+.np-autosave{font-size:0.68rem;color:var(--text-muted);opacity:0;transition:opacity .4s;}
+/* TOOLBAR */
+.np-toolbar{display:flex;flex-wrap:wrap;gap:3px;padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+.np-toolbar select,.np-tool-btn{background:var(--btn-bg);border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:0.75rem;font-family:var(--font-body);color:var(--text);cursor:pointer;transition:all .15s;height:26px;}
+.np-toolbar select{padding:2px 4px;}
+.np-tool-btn:hover,.np-tool-btn.active{background:var(--text);color:var(--bg);}
+.np-tool-btn{min-width:26px;display:inline-flex;align-items:center;justify-content:center;}
+.np-color-btn{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);cursor:pointer;padding:0;flex-shrink:0;transition:transform .15s;}
+.np-color-btn:hover{transform:scale(1.2);}
+.np-sep{width:1px;background:var(--border);margin:0 3px;align-self:stretch;}
+/* COLOR PICKERS */
+.np-color-row{display:flex;align-items:center;gap:5px;font-size:0.68rem;color:var(--text-muted);}
+/* EDITOR */
+.np-editor-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
+#np-editor{flex:1;padding:14px 16px;outline:none;font-family:var(--font-body);font-size:0.9rem;line-height:1.7;color:var(--text);overflow-y:auto;min-height:0;}
+#np-editor:empty::before{content:'Start writing… drag tasks here too';color:var(--text-muted);pointer-events:none;font-style:italic;}
+/* SNIPPETS DROP ZONE */
+.np-drop-active{background:rgba(52,152,219,0.06)!important;}
+/* SNIPPET DRAG FROM NOTEPAD */
+.np-snippet{display:inline-block;background:var(--q2-light);color:var(--q2-text);border-radius:6px;padding:1px 8px;font-size:0.8rem;cursor:grab;margin:2px;border:1px dashed var(--q2-text);user-select:none;}
+.np-snippet:active{cursor:grabbing;}
+/* FOOTER */
+.np-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.np-wordcount{font-size:0.68rem;color:var(--text-muted);}
+.np-clear-btn{font-size:0.68rem;background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);transition:all .15s;}
+.np-clear-btn:hover{border-color:#e74c3c;color:#e74c3c;}
+@media(max-width:500px){#notepad-panel{width:100vw;}}
 </style>
 </head>
 <body>
@@ -254,6 +298,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 <!-- ── MAIN APP ── -->
 <div id="app" style="display:none;">
   <div id="bg-layer"></div>
+  <div class="app-layout" id="app-layout">
   <div class="app-wrap">
     <header>
       <div class="brand">
@@ -655,8 +700,10 @@ function renderQuadrant(q) {
     div.addEventListener('dragstart',e=>{
       dragSrc={qid:q.id,index:i};
       setTimeout(()=>div.classList.add('dragging'),0);
-      e.dataTransfer.effectAllowed='move';
-      e.dataTransfer.setData('text/plain','');
+      e.dataTransfer.effectAllowed='copyMove';
+      var taskText = (task && task.text) ? task.text : '';
+      e.dataTransfer.setData('text/plain', taskText);
+      e.dataTransfer.setData('text/x-qid', q.id);
     });
     div.addEventListener('dragend',()=>{
       div.classList.remove('dragging');
@@ -739,20 +786,30 @@ function setupDropZones(){
       }
     });
     list.addEventListener('drop',e=>{
-      e.preventDefault(); if(!dragSrc) return;
-      const targetQid=list.closest('.quadrant').id.replace('quad-','');
-      const afterEl=getDragAfterElement(list,e.clientY);
-      const [task]=data[dragSrc.qid].splice(dragSrc.index,1);
-      if(afterEl===null){ data[targetQid].push(task); }
-      else {
-        let idx=parseInt(afterEl.dataset.idx);
-        if(dragSrc.qid===targetQid&&dragSrc.index<idx) idx--;
-        data[targetQid].splice(idx,0,task);
-      }
-      dragSrc=null; save();
+      e.preventDefault();
       list.classList.remove('drag-active');
       list.closest('.quadrant').classList.remove('drag-over');
-      renderAll();
+      const targetQid=list.closest('.quadrant').id.replace('quad-','');
+      if(dragSrc){
+        // task-to-task drag within/between quadrants
+        const afterEl=getDragAfterElement(list,e.clientY);
+        const [task]=data[dragSrc.qid].splice(dragSrc.index,1);
+        if(afterEl===null){ data[targetQid].push(task); }
+        else {
+          let idx=parseInt(afterEl.dataset.idx);
+          if(dragSrc.qid===targetQid&&dragSrc.index<idx) idx--;
+          data[targetQid].splice(idx,0,task);
+        }
+        dragSrc=null; save(); renderAll();
+      } else {
+        // snippet from notepad dropped onto matrix
+        var txt=e.dataTransfer.getData('text/plain');
+        if(txt&&txt.trim()){
+          data[targetQid].push({text:txt.trim(),url:'',done:false,created:Date.now()});
+          save(); renderAll();
+          showToast('Snippet added as task ✓','ok');
+        }
+      }
     });
   });
 }
@@ -870,6 +927,256 @@ QUADRANTS.forEach(q=>{
 });
 
 document.getElementById('bg-modal').addEventListener('click',function(e){ if(e.target===this) closeBgModal(); });
+
+/* ════════════════════════════════════════
+   NOTEPAD
+════════════════════════════════════════ */
+let npOpen = false;
+let npSaveTimer = null;
+let npDragSnippet = null;
+
+function toggleNotepad(){
+  npOpen = !npOpen;
+  var panel = document.getElementById('notepad-panel');
+  var toggle = document.getElementById('notepad-toggle');
+  var layout = document.getElementById('app-layout');
+  panel.classList.toggle('open', npOpen);
+  toggle.classList.toggle('panel-open', npOpen);
+  layout.classList.toggle('np-open', npOpen);
+  toggle.textContent = npOpen ? '✕ Close' : '📝 Notes';
+  if(npOpen){ setTimeout(function(){ document.getElementById('np-editor').focus(); }, 360); }
+}
+
+function npExec(cmd, val){
+  document.getElementById('np-editor').focus();
+  document.execCommand(cmd, false, val || null);
+  npScheduleSave();
+}
+
+function npColor(cmd, val){
+  document.getElementById('np-editor').focus();
+  document.execCommand(cmd, false, val);
+  npScheduleSave();
+}
+
+function npScheduleSave(){
+  clearTimeout(npSaveTimer);
+  npSaveTimer = setTimeout(npSave, 800);
+  npWordCount();
+}
+
+function npSave(){
+  var html = document.getElementById('np-editor').innerHTML;
+  LS.set('covey_notepad', html);
+  var el = document.getElementById('np-autosave');
+  if(el){ el.textContent = '✓ Saved'; el.style.opacity = '1'; setTimeout(function(){ el.style.opacity='0'; }, 1800); }
+}
+
+function npLoad(){
+  var saved = LS.get('covey_notepad', '');
+  if(saved){ document.getElementById('np-editor').innerHTML = saved; }
+  npWordCount();
+}
+
+function npWordCount(){
+  var text = document.getElementById('np-editor').innerText || '';
+  var words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+  var el = document.getElementById('np-wordcount');
+  if(el) el.textContent = words + (words === 1 ? ' word' : ' words');
+}
+
+function npClear(){
+  var btn = document.getElementById('np-editor');
+  if(!btn) return;
+  // Confirm before clearing
+  if(btn.dataset.confirmClear === 'true'){
+    clearTimeout(btn._clearTimer);
+    btn.innerHTML = '';
+    btn.dataset.confirmClear = 'false';
+    npSave(); npWordCount();
+    var footer = document.querySelector('.np-clear-btn');
+    if(footer){ footer.textContent = 'Clear'; footer.style.color=''; footer.style.borderColor=''; }
+  } else {
+    btn.dataset.confirmClear = 'true';
+    var footer = document.querySelector('.np-clear-btn');
+    if(footer){ footer.textContent = 'Sure? Clear all'; footer.style.color='#e74c3c'; footer.style.borderColor='#e74c3c'; }
+    btn._clearTimer = setTimeout(function(){
+      btn.dataset.confirmClear = 'false';
+      var f = document.querySelector('.np-clear-btn');
+      if(f){ f.textContent = 'Clear'; f.style.color=''; f.style.borderColor=''; }
+    }, 3000);
+  }
+}
+
+/* ── DRAG: TASK → NOTEPAD ── */
+function setupNotepadDrop(){
+  var editor = document.getElementById('np-editor');
+  if(!editor) return;
+  editor.addEventListener('dragover', function(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    editor.classList.add('np-drop-active');
+  });
+  editor.addEventListener('dragleave', function(e){
+    if(!editor.contains(e.relatedTarget)) editor.classList.remove('np-drop-active');
+  });
+  editor.addEventListener('drop', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    editor.classList.remove('np-drop-active');
+    var text = e.dataTransfer.getData('text/plain');
+    var qid  = e.dataTransfer.getData('text/x-qid');
+    if(!text || !text.trim()) return;
+    var qColors = {q1:'#c0392b',q2:'#1a6b3c',q3:'#d4830a',q4:'#5d6d7e'};
+    var qLabels = {q1:'Q1',q2:'Q2',q3:'Q3',q4:'Q4'};
+    var line = document.createElement('div');
+    if(qid && qColors[qid]){
+      line.innerHTML = '&bull; <b><span style="color:' + qColors[qid] + '">' + qLabels[qid] + ' &mdash; </span><span style="color:#1a1a1a">' + text.trim() + '</span></b>';
+    } else {
+      line.innerHTML = '&bull; <b>' + text.trim() + '</b>';
+    }
+    editor.focus();
+    var sel = window.getSelection();
+    if(sel && sel.rangeCount){
+      var range = sel.getRangeAt(0);
+      range.collapse(false);
+      range.insertNode(line);
+      range.setStartAfter(line);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      editor.appendChild(line);
+    }
+    dragSrc = null;
+    npScheduleSave();
+  });
+}
+
+/* ── DRAG: NOTEPAD SNIPPET → MATRIX ── */
+function setupSnippetDrag(){
+  var editor = document.getElementById('np-editor');
+  if(!editor) return;
+  editor.addEventListener('dragstart', function(e){
+    var sel = window.getSelection();
+    if(sel && !sel.isCollapsed){
+      var text = sel.toString().trim();
+      if(text){
+        e.dataTransfer.setData('text/plain', text);
+        e.dataTransfer.effectAllowed = 'copy';
+        dragSrc = null; // ensure matrix treats this as snippet not task
+        npDragSnippet = text;
+      }
+    }
+  });
+  editor.addEventListener('dragend', function(){
+    npDragSnippet = null;
+  });
+}
+
+/* ── INIT NOTEPAD ── */
+function initNotepad(){
+  npLoad();
+  setupNotepadDrop();
+  setupSnippetDrag();
+  extendDropZonesForNotepad();
+  var editor = document.getElementById('np-editor');
+  if(editor){
+    editor.addEventListener('input', function(){ npScheduleSave(); });
+    editor.addEventListener('keydown', function(e){
+      // Tab = indent
+      if(e.key === 'Tab'){ e.preventDefault(); document.execCommand('insertHTML', false, '&nbsp;&nbsp;&nbsp;&nbsp;'); }
+    });
+  }
+}
+
+initNotepad();
 </script>
+
+  </div><!-- end app-layout -->
+<!-- NOTEPAD TOGGLE TAB -->
+<button id="notepad-toggle" onclick="toggleNotepad()" title="Open Notepad">📝 Notes</button>
+
+<!-- NOTEPAD PANEL -->
+<div id="notepad-panel">
+  <div class="np-header">
+    <h3>📝 Ink it as you Think-it</h3>
+    <div class="np-header-actions">
+      <span class="np-autosave" id="np-autosave">✓ Saved</span>
+      <button class="np-close" onclick="toggleNotepad()" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="np-toolbar">
+    <!-- Font -->
+    <select id="np-font" onchange="npExec('fontName',this.value)" title="Font">
+      <option value="DM Sans">Sans</option>
+      <option value="Playfair Display">Serif</option>
+      <option value="Courier New">Mono</option>
+      <option value="Georgia">Georgia</option>
+    </select>
+    <!-- Size -->
+    <select id="np-size" onchange="npExec('fontSize',this.value)" title="Size">
+      <option value="2">S</option>
+      <option value="3" selected>M</option>
+      <option value="4">L</option>
+      <option value="5">XL</option>
+    </select>
+
+    <div class="np-sep"></div>
+
+    <!-- Format -->
+    <button class="np-tool-btn" onclick="npExec('bold')" title="Bold"><b>B</b></button>
+    <button class="np-tool-btn" onclick="npExec('italic')" title="Italic"><i>I</i></button>
+    <button class="np-tool-btn" onclick="npExec('underline')" title="Underline"><u>U</u></button>
+    <button class="np-tool-btn" onclick="npExec('strikeThrough')" title="Strikethrough"><s>S</s></button>
+
+    <div class="np-sep"></div>
+
+    <!-- Align -->
+    <button class="np-tool-btn" onclick="npExec('justifyLeft')" title="Align Left">&#8676;</button>
+    <button class="np-tool-btn" onclick="npExec('justifyCenter')" title="Center">&#8612;</button>
+    <button class="np-tool-btn" onclick="npExec('justifyRight')" title="Align Right">&#8677;</button>
+
+    <div class="np-sep"></div>
+
+    <!-- Lists -->
+    <button class="np-tool-btn" onclick="npExec('insertUnorderedList')" title="Bullet List">&#8226;&#8801;</button>
+    <button class="np-tool-btn" onclick="npExec('insertOrderedList')" title="Numbered List">1&#8801;</button>
+
+    <div class="np-sep"></div>
+
+    <!-- Text Color -->
+    <span style="font-size:0.65rem;color:var(--text-muted);align-self:center;">A</span>
+    <button class="np-color-btn" style="background:#1a1a1a;" onclick="npColor('foreColor','#1a1a1a')" title="Black"></button>
+    <button class="np-color-btn" style="background:#c0392b;" onclick="npColor('foreColor','#c0392b')" title="Red"></button>
+    <button class="np-color-btn" style="background:#1a6b3c;" onclick="npColor('foreColor','#1a6b3c')" title="Green"></button>
+    <button class="np-color-btn" style="background:#3498db;" onclick="npColor('foreColor','#3498db')" title="Blue"></button>
+    <button class="np-color-btn" style="background:#d4830a;" onclick="npColor('foreColor','#d4830a')" title="Orange"></button>
+    <button class="np-color-btn" style="background:#8e44ad;" onclick="npColor('foreColor','#8e44ad')" title="Purple"></button>
+
+    <div class="np-sep"></div>
+
+    <!-- Highlight -->
+    <span style="font-size:0.65rem;color:var(--text-muted);align-self:center;">H</span>
+    <button class="np-color-btn" style="background:#fef08a;border-color:#ca8a04;" onclick="npColor('hiliteColor','#fef08a')" title="Yellow highlight"></button>
+    <button class="np-color-btn" style="background:#bbf7d0;border-color:#16a34a;" onclick="npColor('hiliteColor','#bbf7d0')" title="Green highlight"></button>
+    <button class="np-color-btn" style="background:#bfdbfe;border-color:#2563eb;" onclick="npColor('hiliteColor','#bfdbfe')" title="Blue highlight"></button>
+    <button class="np-color-btn" style="background:#fecaca;border-color:#dc2626;" onclick="npColor('hiliteColor','#fecaca')" title="Red highlight"></button>
+    <button class="np-color-btn" style="background:transparent;border-color:#aaa;" onclick="npColor('hiliteColor','transparent')" title="Remove highlight">✕</button>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="np-editor-wrap">
+    <div id="np-editor" contenteditable="true" spellcheck="true"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="np-footer">
+    <span class="np-wordcount" id="np-wordcount">0 words</span>
+    <button class="np-clear-btn" onclick="npClear()">Clear</button>
+  </div>
+</div>
 </body>
 </html>

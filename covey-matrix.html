@@ -267,7 +267,10 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .np-snippet{display:inline-block;background:var(--q2-light);color:var(--q2-text);border-radius:6px;padding:1px 8px;font-size:0.8rem;cursor:grab;margin:2px;border:1px dashed var(--q2-text);user-select:none;}
 .np-snippet:active{cursor:grabbing;}
 /* FOOTER */
-.np-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.np-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;flex-wrap:wrap;gap:6px;}
+.np-export-btns{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.np-export-btn{font-size:0.68rem;background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);transition:all .15s;white-space:nowrap;}
+.np-export-btn:hover{border-color:var(--text);color:var(--text);}
 .np-wordcount{font-size:0.68rem;color:var(--text-muted);}
 .np-clear-btn{font-size:0.68rem;background:none;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);transition:all .15s;}
 .np-clear-btn:hover{border-color:#e74c3c;color:#e74c3c;}
@@ -1074,6 +1077,96 @@ function setupSnippetDrag(){
   });
 }
 
+/* ── NOTEPAD EXPORT FUNCTIONS ── */
+function npCopyClipboard(){
+  var editor = document.getElementById('np-editor');
+  if(!editor || !editor.innerHTML.trim()) { showToast('Nothing to copy yet!','info'); return; }
+  // Use clipboard API with html fallback
+  var html = editor.innerHTML;
+  var text = editor.innerText;
+  if(navigator.clipboard && window.ClipboardItem){
+    var item = new ClipboardItem({
+      'text/html': new Blob([html], {type:'text/html'}),
+      'text/plain': new Blob([text], {type:'text/plain'})
+    });
+    navigator.clipboard.write([item]).then(function(){
+      showToast('📋 Notes copied — paste into OneNote!','ok');
+    }).catch(function(){
+      // fallback
+      npCopyFallback(text);
+    });
+  } else {
+    npCopyFallback(text);
+  }
+}
+
+function npCopyFallback(text){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast('📋 Notes copied — paste into OneNote!','ok');
+}
+
+function npDownloadHtml(){
+  var editor = document.getElementById('np-editor');
+  if(!editor || !editor.innerHTML.trim()) { showToast('Nothing to export yet!','info'); return; }
+  var name = localStorage.getItem('covey_name') || 'Notes';
+  var date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    + '<title>' + name + ' — Ink it as you Think-it</title>'
+    + '<style>body{font-family:DM Sans,sans-serif;max-width:800px;margin:40px auto;padding:0 24px;line-height:1.7;color:#1a1a1a;}'
+    + 'h1{font-family:Playfair Display,serif;margin-bottom:4px;}'
+    + '.meta{color:#888;font-size:0.8rem;margin-bottom:32px;}'
+    + '</style></head><body>'
+    + '<h1>' + name + " Notes</h1>"
+    + '<p class="meta">Exported from Focus Matrix &nbsp;·&nbsp; ' + date + '</p>'
+    + editor.innerHTML
+    + '</body></html>';
+  var blob = new Blob([html], {type:'text/html'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name + "-notes.html";
+  a.click();
+  showToast('🌐 HTML file downloaded','ok');
+}
+
+function npDownloadDocx(){
+  var editor = document.getElementById('np-editor');
+  if(!editor || !editor.innerHTML.trim()) { showToast('Nothing to export yet!','info'); return; }
+  var name = localStorage.getItem('covey_name') || 'Notes';
+  var date = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  var lines = [];
+  try {
+    editor.querySelectorAll('div,p,li').forEach(function(el){
+      if(el.innerText) lines.push(el.innerText);
+    });
+  } catch(e){}
+  if(!lines.length) lines = [(editor.innerText||'')];
+  // Build a minimal HTML that Word can open as .doc
+  var wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+    + 'xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
+    + '<head><meta charset="UTF-8">'
+    + '<style>body{font-family:Calibri,sans-serif;font-size:11pt;margin:2cm;line-height:1.6;}'
+    + 'b{font-weight:bold;} i{font-style:italic;} u{text-decoration:underline;}'
+    + 'h1{font-size:18pt;font-family:Georgia,serif;margin-bottom:4pt;}'
+    + 'p.meta{color:#888;font-size:9pt;margin-bottom:24pt;border-bottom:1px solid #eee;padding-bottom:12pt;}'
+    + '</style></head><body>'
+    + '<h1>' + name + " Notes &mdash; Ink it as you Think-it</h1>"
+    + '<p class="meta">Exported from Focus Matrix &nbsp;&middot;&nbsp; ' + date + '</p>'
+    + editor.innerHTML
+    + '</body></html>';
+  var blob = new Blob(['﻿' + wordHtml], {type:'application/msword'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name + "-notes.doc";
+  a.click();
+  showToast('📄 Word file downloaded — open in Word or OneNote','ok');
+}
+
 /* ── INIT NOTEPAD ── */
 function initNotepad(){
   npLoad();
@@ -1175,7 +1268,12 @@ initNotepad();
   <!-- FOOTER -->
   <div class="np-footer">
     <span class="np-wordcount" id="np-wordcount">0 words</span>
-    <button class="np-clear-btn" onclick="npClear()">Clear</button>
+    <div class="np-export-btns">
+      <button class="np-export-btn" onclick="npCopyClipboard()" title="Copy all notes to clipboard">📋 Copy</button>
+      <button class="np-export-btn" onclick="npDownloadHtml()" title="Download as HTML">🌐 HTML</button>
+      <button class="np-export-btn" onclick="npDownloadDocx()" title="Download as Word document">📄 Word</button>
+      <button class="np-clear-btn" onclick="npClear()">Clear</button>
+    </div>
   </div>
 </div>
 </body>
